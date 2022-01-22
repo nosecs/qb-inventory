@@ -56,11 +56,9 @@ local function FormatWeaponAttachments(itemdata)
             if WeaponAttachments[itemdata.name] ~= nil then
                 for key, value in pairs(WeaponAttachments[itemdata.name]) do
                     if value.component == v.component then
-                        item = value.item
                         attachments[#attachments+1] = {
                             attachment = key,
-                            label = QBCore.Shared.Items[item].label
-                            --label = value.label
+                            label = value.label
                         }
                     end
                 end
@@ -71,7 +69,11 @@ local function FormatWeaponAttachments(itemdata)
 end
 
 local function IsBackEngine(vehModel)
-    if BackEngineVehicles[vehModel] then return true end
+    for _, model in pairs(BackEngineVehicles) do
+        if GetHashKey(model) == vehModel then
+            return true
+        end
+    end
     return false
 end
 
@@ -104,6 +106,7 @@ local function CloseTrunk()
 end
 
 local function closeInventory()
+    TriggerEvent("qb-inventory:closeInventory:evidencebox")
     SendNUIMessage({
         action = "close",
     })
@@ -588,7 +591,7 @@ RegisterCommand('inventory', function()
                     elseif vehicleClass == 12 then
                         maxweight = 120000
                         slots = 35
-                    elseif vehicleClass == 13 then
+		            elseif vehicleClass == 13 then
                         maxweight = 0
                         slots = 0
                     elseif vehicleClass == 14 then
@@ -682,7 +685,6 @@ end)
 RegisterNUICallback('RemoveAttachment', function(data, cb)
     local ped = PlayerPedId()
     local WeaponData = QBCore.Shared.Items[data.WeaponData.name]
-    local label = QBCore.Shared.Items
     local Attachment = WeaponAttachments[WeaponData.name:upper()][data.AttachmentData.attachment]
 
     QBCore.Functions.TriggerCallback('weapons:server:RemoveAttachment', function(NewAttachments)
@@ -692,10 +694,9 @@ RegisterNUICallback('RemoveAttachment', function(data, cb)
             for k, v in pairs(NewAttachments) do
                 for wep, pew in pairs(WeaponAttachments[WeaponData.name:upper()]) do
                     if v.component == pew.component then
-                        item = pew.item
                         Attachies[#Attachies+1] = {
                             attachment = pew.item,
-                            label = QBCore.Shared.Items[item].label,
+                            label = pew.label,
                         }
                     end
                 end
@@ -717,6 +718,7 @@ RegisterNUICallback('getCombineItem', function(data, cb)
 end)
 
 RegisterNUICallback("CloseInventory", function(data, cb)
+    TriggerEvent("qb-inventory:closeInventory:evidencebox")
     if currentOtherInventory == "none-inv" then
         CurrentDrop = 0
         CurrentVehicle = nil
@@ -814,7 +816,7 @@ CreateThread(function()
         if DropsNear ~= nil then
             for k, v in pairs(DropsNear) do
                 if DropsNear[k] ~= nil then
-                    DrawMarker(2, v.coords.x, v.coords.y, v.coords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.3, 0.15, 120, 10, 20, 155, false, false, false, 1, false, false, false)
+                    DrawMarker(32, v.coords.x, v.coords.y, v.coords.z -0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1, 0.15, 50, 50, 150, 155, false, false, false, 1, false, false, false)
                 end
             end
         end
@@ -876,12 +878,12 @@ CreateThread(function()
 	while true do
 		local pos = GetEntityCoords(PlayerPedId())
 		local inRange = false
-		local distance = #(pos - vector3(Config.AttachmentCraftingLocation))
+		local distance = #(pos - vector3(Config.AttachmentCrafting["location"].x, Config.AttachmentCrafting["location"].y, Config.AttachmentCrafting["location"].z))
 
 		if distance < 10 then
 			inRange = true
 			if distance < 1.5 then
-				DrawText3Ds(Config.AttachmentCraftingLocation.x, Config.AttachmentCraftingLocation.y, Config.AttachmentCraftingLocation.z, "~g~E~w~ - Craft")
+				DrawText3Ds(Config.AttachmentCrafting["location"].x, Config.AttachmentCrafting["location"].y, Config.AttachmentCrafting["location"].z, "~g~E~w~ - Craft")
 				if IsControlJustPressed(0, 38) then
 					local crafting = {}
 					crafting.label = "Attachment Crafting"

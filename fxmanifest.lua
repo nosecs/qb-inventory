@@ -9,10 +9,7 @@ shared_scripts {
 	'@qb-weapons/config.lua'
 }
 
-server_scripts {
-	'@oxmysql/lib/MySQL.lua',
-	'server/main.lua'
-}
+server_script 'server/main.lua'
 client_script 'client/main.lua'
 
 ui_page {

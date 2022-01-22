@@ -34,7 +34,7 @@ local function hasCraftItems(source, CostItems, amount)
 end
 
 local function IsVehicleOwned(plate)
-    local result = MySQL.Sync.fetchScalar('SELECT 1 from player_vehicles WHERE plate = ?', {plate})
+    local result = exports.oxmysql:scalarSync('SELECT 1 from player_vehicles WHERE plate = ?', {plate})
     if result then return true else return false end
 end
 
@@ -68,7 +68,7 @@ end
 -- Stash Items
 local function GetStashItems(stashId)
 	local items = {}
-	local result = MySQL.Sync.fetchScalar('SELECT items FROM stashitems WHERE stash = ?', {stashId})
+	local result = exports.oxmysql:scalarSync('SELECT items FROM stashitems WHERE stash = ?', {stashId})
 	if result then
 		local stashItems = json.decode(result)
 		if stashItems then
@@ -101,7 +101,7 @@ local function SaveStashItems(stashId, items)
 			for slot, item in pairs(items) do
 				item.description = nil
 			end
-			MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+			exports.oxmysql:insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
 				['stash'] = stashId,
 				['items'] = json.encode(items)
 			})
@@ -189,7 +189,7 @@ end
 -- Trunk items
 local function GetOwnedVehicleItems(plate)
 	local items = {}
-	local result = MySQL.Sync.fetchScalar('SELECT items FROM trunkitems WHERE plate = ?', {plate})
+	local result = exports.oxmysql:scalarSync('SELECT items FROM trunkitems WHERE plate = ?', {plate})
 	if result then
 		local trunkItems = json.decode(result)
 		if trunkItems then
@@ -222,7 +222,7 @@ local function SaveOwnedVehicleItems(plate, items)
 			for slot, item in pairs(items) do
 				item.description = nil
 			end
-			MySQL.Async.insert('INSERT INTO trunkitems (plate, items) VALUES (:plate, :items) ON DUPLICATE KEY UPDATE items = :items', {
+			exports.oxmysql:insert('INSERT INTO trunkitems (plate, items) VALUES (:plate, :items) ON DUPLICATE KEY UPDATE items = :items', {
 				['plate'] = plate,
 				['items'] = json.encode(items)
 			})
@@ -310,7 +310,7 @@ end
 -- Glovebox items
 local function GetOwnedVehicleGloveboxItems(plate)
 	local items = {}
-	local result = MySQL.Sync.fetchScalar('SELECT items FROM gloveboxitems WHERE plate = ?', {plate})
+	local result = exports.oxmysql:scalarSync('SELECT items FROM gloveboxitems WHERE plate = ?', {plate})
 	if result then
 		local gloveboxItems = json.decode(result)
 		if gloveboxItems then
@@ -343,7 +343,7 @@ local function SaveOwnedGloveboxItems(plate, items)
 			for slot, item in pairs(items) do
 				item.description = nil
 			end
-			MySQL.Async.insert('INSERT INTO gloveboxitems (plate, items) VALUES (:plate, :items) ON DUPLICATE KEY UPDATE items = :items', {
+			exports.oxmysql:insert('INSERT INTO gloveboxitems (plate, items) VALUES (:plate, :items) ON DUPLICATE KEY UPDATE items = :items', {
 				['plate'] = plate,
 				['items'] = json.encode(items)
 			})
@@ -1288,6 +1288,7 @@ RegisterNetEvent('inventory:server:SetInventoryData', function(fromInventory, to
 			end
 		elseif QBCore.Shared.SplitStr(shopType, "_")[1] == "Itemshop" then
 			if Player.Functions.RemoveMoney("cash", price, "itemshop-bought-item") then
+				if itemData.name == 'evidence-bag' then itemData.info.bagid = math.random(11111,99999) end
                 if QBCore.Shared.SplitStr(itemData.name, "_")[1] == "weapon" then
                     itemData.info.serie = tostring(QBCore.Shared.RandomInt(2) .. QBCore.Shared.RandomStr(3) .. QBCore.Shared.RandomInt(1) .. QBCore.Shared.RandomStr(2) .. QBCore.Shared.RandomInt(3) .. QBCore.Shared.RandomStr(4))
                 end
@@ -1396,7 +1397,7 @@ RegisterNetEvent('inventory:server:SetInventoryData', function(fromInventory, to
 end)
 
 RegisterNetEvent('qb-inventory:server:SaveStashItems', function(stashId, items)
-    MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+    exports.oxmysql:insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
         ['stash'] = stashId,
         ['items'] = json.encode(items)
     })
@@ -1499,6 +1500,8 @@ QBCore.Commands.Add("giveitem", "Give An Item (Admin Only)", {{name="id", help="
 					info.uses = 20
 				elseif itemData["name"] == "markedbills" then
 					info.worth = math.random(5000, 10000)
+				elseif itemData['name'] == 'evidence-bag' then
+					info.bagid = math.random(11111,99999)
 				elseif itemData["name"] == "labkey" then
 					info.lab = exports["qb-methlab"]:GenerateRandomLab()
 				elseif itemData["name"] == "printerdocument" then
