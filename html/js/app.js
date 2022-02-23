@@ -553,6 +553,9 @@ function FormatItemInfo(itemData) {
                 itemData.info.cash +
                 "</span></p>"
             );
+        } else if (itemData.name == "duffel-bag") { // qb-bag
+            $(".item-info-title").html('<p>'+itemData.label+'</p>') // qb-bag
+            $(".item-info-description").html('<p><strong>Bag ID Number: </strong><span>' + itemData.info.bagid); // qb-bag
         } else if (itemData.name == "markedbills") {
             $(".item-info-title").html("<p>" + itemData.label + "</p>");
             $(".item-info-description").html(
